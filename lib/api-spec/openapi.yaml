@@ -1,0 +1,1460 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for ليلتك wedding venue platform
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: venues
+    description: Wedding venue operations
+  - name: bookings
+    description: Booking operations
+  - name: invitations
+    description: E-invitation operations
+  - name: merchants
+    description: Merchant operations
+  - name: categories
+    description: Venue category operations
+  - name: reviews
+    description: Venue review operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── CATEGORIES ─────────────────────────────────────────────────────────────
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all venue categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  # ─── VENUES ─────────────────────────────────────────────────────────────────
+
+  /venues:
+    get:
+      operationId: listVenues
+      tags: [venues]
+      summary: List venues with optional filters
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: minCapacity
+          in: query
+          schema:
+            type: integer
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of venues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueListResponse"
+
+  /venues/featured:
+    get:
+      operationId: getFeaturedVenues
+      tags: [venues]
+      summary: Get featured/premium venues for homepage carousel
+      responses:
+        "200":
+          description: Featured venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Venue"
+
+  /venues/nearby:
+    get:
+      operationId: getNearbyVenues
+      tags: [venues]
+      summary: Get venues near Riyadh districts
+      parameters:
+        - name: district
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Nearby venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Venue"
+
+  /venues/stats:
+    get:
+      operationId: getVenueStats
+      tags: [venues]
+      summary: Platform statistics summary
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueStats"
+
+  /venues/{id}:
+    get:
+      operationId: getVenue
+      tags: [venues]
+      summary: Get single venue by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Venue details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueDetail"
+        "404":
+          description: Not found
+
+  /venues/{id}/availability:
+    get:
+      operationId: getVenueAvailability
+      tags: [venues]
+      summary: Get available dates for a venue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available dates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueAvailability"
+
+  # ─── BOOKINGS ────────────────────────────────────────────────────────────────
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings for the current user
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Bad request
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update a booking (e.g. cancel)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/upcoming:
+    get:
+      operationId: getUpcomingBookings
+      tags: [bookings]
+      summary: Get upcoming bookings (wow endpoint)
+      responses:
+        "200":
+          description: Upcoming bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  # ─── E-INVITATIONS ───────────────────────────────────────────────────────────
+
+  /invitations:
+    post:
+      operationId: createInvitation
+      tags: [invitations]
+      summary: Create a new e-invitation (returns public + manage tokens)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationInput"
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invitation"
+
+  /invitations/public/{publicToken}:
+    get:
+      operationId: getPublicInvitation
+      tags: [invitations]
+      summary: Get the public invitation view for a guest (no manage data)
+      parameters:
+        - name: publicToken
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public invitation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicInvitation"
+        "404":
+          description: Not found
+
+  /invitations/public/{publicToken}/rsvp:
+    post:
+      operationId: respondToInvitation
+      tags: [invitations]
+      summary: Submit a guest RSVP (attending or not, with party size)
+      parameters:
+        - name: publicToken
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpInput"
+      responses:
+        "201":
+          description: RSVP recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rsvp"
+        "404":
+          description: Not found
+
+  /invitations/manage:
+    get:
+      operationId: getManagedInvitation
+      tags: [invitations]
+      summary: Get the host dashboard view (invitation + RSVPs + stats)
+      description: >
+        Authenticates via `Authorization: Bearer <manageToken>`.
+        The token must never appear in the URL path or query string.
+      security:
+        - ManageBearerAuth: []
+      responses:
+        "200":
+          description: Managed invitation with RSVP list and stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedInvitation"
+        "401":
+          description: Missing or invalid bearer token
+        "404":
+          description: Not found
+
+  # ─── REVIEWS ─────────────────────────────────────────────────────────────────
+
+  /venues/{id}/reviews:
+    get:
+      operationId: listVenueReviews
+      tags: [reviews]
+      summary: Get reviews for a venue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: createVenueReview
+      tags: [reviews]
+      summary: Post a review for a venue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  # ─── MERCHANTS ───────────────────────────────────────────────────────────────
+
+  /merchants/register:
+    post:
+      operationId: registerMerchant
+      tags: [merchants]
+      summary: Register as a merchant/venue owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantInput"
+      responses:
+        "201":
+          description: Merchant registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+
+  /merchants/{id}:
+    get:
+      operationId: getMerchant
+      tags: [merchants]
+      summary: Get merchant profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Merchant profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+    patch:
+      operationId: updateMerchant
+      tags: [merchants]
+      summary: Update merchant profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantUpdate"
+      responses:
+        "200":
+          description: Updated merchant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+
+  /merchants/{id}/venues:
+    get:
+      operationId: listMerchantVenues
+      tags: [merchants]
+      summary: List all venues owned by a merchant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Merchant's venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Venue"
+    post:
+      operationId: createMerchantVenue
+      tags: [merchants]
+      summary: Add a new venue (merchant)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueInput"
+      responses:
+        "201":
+          description: Venue created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+
+  /merchants/{id}/venues/{venueId}:
+    patch:
+      operationId: updateMerchantVenue
+      tags: [merchants]
+      summary: Update a venue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueUpdate"
+      responses:
+        "200":
+          description: Updated venue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+    delete:
+      operationId: deleteMerchantVenue
+      tags: [merchants]
+      summary: Delete/deactivate a venue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /merchants/{id}/dashboard:
+    get:
+      operationId: getMerchantDashboard
+      tags: [merchants]
+      summary: Get merchant dashboard stats (wow endpoint)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantDashboard"
+
+  /merchants/{id}/bookings:
+    get:
+      operationId: listMerchantBookings
+      tags: [merchants]
+      summary: List bookings for merchant's venues
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Merchant bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  /merchants/{id}/bookings/{bookingId}:
+    patch:
+      operationId: updateMerchantBooking
+      tags: [merchants]
+      summary: Approve or reject a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantBookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # ─── STORAGE ────────────────────────────────────────────────────────────────
+
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+# ─── SCHEMAS ─────────────────────────────────────────────────────────────────
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Category:
+      type: object
+      required: [id, nameAr, slug, icon]
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+          description: Arabic name of the category
+        slug:
+          type: string
+        icon:
+          type: string
+
+    Venue:
+      type: object
+      required: [id, nameAr, categorySlug, pricePerNight, capacity, district, rating, reviewCount, images, isFeatured, isAvailable]
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        categorySlug:
+          type: string
+        pricePerNight:
+          type: number
+        capacity:
+          type: integer
+        district:
+          type: string
+          description: Riyadh district in Arabic
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+        isFeatured:
+          type: boolean
+        isAvailable:
+          type: boolean
+        amenities:
+          type: array
+          items:
+            type: string
+        services:
+          type: array
+          items:
+            type: string
+        description:
+          type: ["string", "null"]
+        merchantId:
+          type: ["integer", "null"]
+
+    VenueDetail:
+      type: object
+      required: [id, nameAr, categorySlug, pricePerNight, capacity, district, rating, reviewCount, images, isFeatured, isAvailable, amenities]
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        categorySlug:
+          type: string
+        pricePerNight:
+          type: number
+        capacity:
+          type: integer
+        district:
+          type: string
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+        isFeatured:
+          type: boolean
+        isAvailable:
+          type: boolean
+        amenities:
+          type: array
+          items:
+            type: string
+        services:
+          type: array
+          items:
+            type: string
+        description:
+          type: ["string", "null"]
+        merchantId:
+          type: ["integer", "null"]
+        menuPdf:
+          type: ["string", "null"]
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        address:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        socialLinks:
+          type: ["object", "null"]
+          properties:
+            instagram:
+              type: ["string", "null"]
+            twitter:
+              type: ["string", "null"]
+
+    VenueListResponse:
+      type: object
+      required: [venues, total, page, limit]
+      properties:
+        venues:
+          type: array
+          items:
+            $ref: "#/components/schemas/Venue"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    VenueStats:
+      type: object
+      required: [totalVenues, totalBookings, avgPrice, totalDistricts]
+      properties:
+        totalVenues:
+          type: integer
+        totalBookings:
+          type: integer
+        avgPrice:
+          type: number
+        totalDistricts:
+          type: integer
+        categoryBreakdown:
+          type: array
+          items:
+            type: object
+            required: [categorySlug, count]
+            properties:
+              categorySlug:
+                type: string
+              count:
+                type: integer
+
+    VenueAvailability:
+      type: object
+      required: [venueId, availableDates, bookedDates]
+      properties:
+        venueId:
+          type: integer
+        availableDates:
+          type: array
+          items:
+            type: string
+        bookedDates:
+          type: array
+          items:
+            type: string
+
+    VenueInput:
+      type: object
+      required: [nameAr, categorySlug, pricePerNight, capacity, district]
+      properties:
+        nameAr:
+          type: string
+        categorySlug:
+          type: string
+        pricePerNight:
+          type: number
+        capacity:
+          type: integer
+        district:
+          type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        services:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: string
+        phone:
+          type: string
+
+    VenueUpdate:
+      type: object
+      properties:
+        nameAr:
+          type: string
+        categorySlug:
+          type: string
+        pricePerNight:
+          type: number
+        capacity:
+          type: integer
+        district:
+          type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        services:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        isAvailable:
+          type: boolean
+        images:
+          type: array
+          items:
+            type: string
+
+    Booking:
+      type: object
+      required: [id, venueId, venueName, eventDate, guestCount, status, totalPrice, reviewToken, createdAt]
+      properties:
+        id:
+          type: integer
+        venueId:
+          type: integer
+        venueName:
+          type: string
+        venueImage:
+          type: ["string", "null"]
+        eventDate:
+          type: string
+        guestCount:
+          type: integer
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled, completed]
+        totalPrice:
+          type: number
+        reviewToken:
+          type: string
+          description: Unguessable UUID token used to submit a post-stay review (one-time use)
+        notes:
+          type: ["string", "null"]
+        groomName:
+          type: ["string", "null"]
+        brideName:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    BookingInput:
+      type: object
+      required: [venueId, eventDate, guestCount, groomName, brideName, contactPhone]
+      properties:
+        venueId:
+          type: integer
+        eventDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        guestCount:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        notes:
+          type: string
+          maxLength: 1000
+        groomName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        brideName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        contactPhone:
+          type: string
+          minLength: 5
+          maxLength: 20
+
+    BookingUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled, completed]
+        notes:
+          type: string
+          maxLength: 1000
+
+    InvitationInput:
+      type: object
+      required: [inviterType, eventDate]
+      properties:
+        template:
+          type: string
+          enum: [emerald, classic]
+        inviterType:
+          type: string
+          enum: [groom, bride_family]
+        groomName:
+          type: ["string", "null"]
+          maxLength: 100
+        groomFatherName:
+          type: ["string", "null"]
+          maxLength: 100
+        brideFatherName:
+          type: ["string", "null"]
+          maxLength: 100
+        brideMotherName:
+          type: ["string", "null"]
+          maxLength: 100
+        groomSideRef:
+          type: ["string", "null"]
+          maxLength: 100
+        eventDate:
+          type: string
+          maxLength: 20
+        eventTime:
+          type: ["string", "null"]
+          maxLength: 50
+        venueName:
+          type: ["string", "null"]
+          maxLength: 200
+        venueAddress:
+          type: ["string", "null"]
+          maxLength: 500
+        note:
+          type: ["string", "null"]
+          maxLength: 1000
+        giftEnabled:
+          type: boolean
+        giftIban:
+          type: ["string", "null"]
+          maxLength: 50
+        giftBankName:
+          type: ["string", "null"]
+          maxLength: 100
+        giftStcPay:
+          type: ["string", "null"]
+          maxLength: 50
+        giftNote:
+          type: ["string", "null"]
+          maxLength: 500
+
+    Invitation:
+      type: object
+      required: [id, publicToken, manageToken, inviterType, eventDate, createdAt]
+      properties:
+        id:
+          type: integer
+        publicToken:
+          type: string
+        manageToken:
+          type: string
+        template:
+          type: string
+          enum: [emerald, classic]
+        inviterType:
+          type: string
+          enum: [groom, bride_family]
+        groomName:
+          type: ["string", "null"]
+        groomFatherName:
+          type: ["string", "null"]
+        brideFatherName:
+          type: ["string", "null"]
+        brideMotherName:
+          type: ["string", "null"]
+        groomSideRef:
+          type: ["string", "null"]
+        eventDate:
+          type: string
+        eventTime:
+          type: ["string", "null"]
+        venueName:
+          type: ["string", "null"]
+        venueAddress:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        giftEnabled:
+          type: boolean
+        giftIban:
+          type: ["string", "null"]
+        giftBankName:
+          type: ["string", "null"]
+        giftStcPay:
+          type: ["string", "null"]
+        giftNote:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    PublicInvitation:
+      type: object
+      required: [publicToken, inviterType, eventDate]
+      properties:
+        publicToken:
+          type: string
+        template:
+          type: string
+          enum: [emerald, classic]
+        inviterType:
+          type: string
+          enum: [groom, bride_family]
+        groomName:
+          type: ["string", "null"]
+        groomFatherName:
+          type: ["string", "null"]
+        brideFatherName:
+          type: ["string", "null"]
+        brideMotherName:
+          type: ["string", "null"]
+        groomSideRef:
+          type: ["string", "null"]
+        eventDate:
+          type: string
+        eventTime:
+          type: ["string", "null"]
+        venueName:
+          type: ["string", "null"]
+        venueAddress:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        giftEnabled:
+          type: boolean
+        giftIban:
+          type: ["string", "null"]
+        giftBankName:
+          type: ["string", "null"]
+        giftStcPay:
+          type: ["string", "null"]
+        giftNote:
+          type: ["string", "null"]
+
+    RsvpInput:
+      type: object
+      required: [guestName, attending]
+      properties:
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        attending:
+          type: boolean
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 20
+        message:
+          type: ["string", "null"]
+          maxLength: 500
+
+    Rsvp:
+      type: object
+      required: [id, guestName, attending, partySize, createdAt]
+      properties:
+        id:
+          type: integer
+        guestName:
+          type: string
+        attending:
+          type: boolean
+        partySize:
+          type: integer
+        message:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ManagedInvitation:
+      type: object
+      required: [invitation, rsvps, stats]
+      properties:
+        invitation:
+          $ref: "#/components/schemas/Invitation"
+        rsvps:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rsvp"
+        stats:
+          type: object
+          required: [totalResponses, attendingResponses, decliningResponses, totalAttendingGuests]
+          properties:
+            totalResponses:
+              type: integer
+            attendingResponses:
+              type: integer
+            decliningResponses:
+              type: integer
+            totalAttendingGuests:
+              type: integer
+
+    Review:
+      type: object
+      required: [id, venueId, authorName, rating, comment, createdAt]
+      properties:
+        id:
+          type: integer
+        venueId:
+          type: integer
+        authorName:
+          type: string
+        rating:
+          type: number
+        comment:
+          type: string
+        createdAt:
+          type: string
+
+    ReviewInput:
+      type: object
+      required: [reviewToken, authorName, rating, comment]
+      properties:
+        reviewToken:
+          type: string
+          description: Unguessable UUID token from the booking (proves ownership without account login)
+        authorName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    Merchant:
+      type: object
+      required: [id, ownerName, businessName, phone, email, crNumber, status, createdAt]
+      properties:
+        id:
+          type: integer
+        ownerName:
+          type: string
+        businessName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        crNumber:
+          type: string
+          description: Commercial registration number (سجل تجاري)
+        status:
+          type: string
+          enum: [pending, approved, suspended]
+        logoUrl:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    MerchantInput:
+      type: object
+      required: [ownerName, businessName, phone, email, crNumber, password]
+      properties:
+        ownerName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        businessName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        email:
+          type: string
+          minLength: 1
+          maxLength: 200
+        crNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 2000
+        logoUrl:
+          type: string
+          maxLength: 500
+
+    MerchantUpdate:
+      type: object
+      properties:
+        ownerName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        businessName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        description:
+          type: string
+          maxLength: 2000
+        logoUrl:
+          type: string
+          maxLength: 500
+
+    MerchantDashboard:
+      type: object
+      required: [merchantId, totalVenues, totalBookings, totalRevenue, pendingBookings, confirmedBookings, thisMonthRevenue, avgRating]
+      properties:
+        merchantId:
+          type: integer
+        totalVenues:
+          type: integer
+        totalBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        pendingBookings:
+          type: integer
+        confirmedBookings:
+          type: integer
+        thisMonthRevenue:
+          type: number
+        avgRating:
+          type: number
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+
+    MerchantBookingUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [confirmed, cancelled]
+        notes:
+          type: string
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    ManageBearerAuth:
+      type: http
+      scheme: bearer
+      description: >
+        Invitation management bearer token (manageToken).
+        Send as `Authorization: Bearer <token>`. Never place this token in
+        a URL path or query string — it must only travel as a request header.
