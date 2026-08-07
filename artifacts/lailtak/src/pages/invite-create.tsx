@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Calendar, Clock, MapPin, Building, Gift, Check, ArrowRight } from "lucide-react";
+import { Sparkles, Calendar, Clock, MapPin, Building, Gift, CheckCircle2, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function InviteCreate() {
@@ -138,7 +138,7 @@ export function InviteCreate() {
               }`}
             >
               <div className="flex items-center justify-center gap-1.5 font-bold text-sm text-emerald-800">
-                <Check className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 أخضر ملكي
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">طابع زمردي أنيق</p>
@@ -309,3 +309,5 @@ export function InviteCreate() {
     </div>
   );
 }
+
+export default InviteCreate;
