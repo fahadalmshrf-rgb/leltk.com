@@ -18,9 +18,11 @@ const CATEGORIES = [
 
 export function Home() {
   const [, setLocation] = useLocation();
-  const { data: featuredVenues, isLoading: isLoadingFeatured } = useGetFeaturedVenues();
-  // Using an arbitrary district for "nearby" simulation
-  const { data: nearbyVenues, isLoading: isLoadingNearby } = useGetNearbyVenues({ district: "الملقا" });
+  const { data: rawFeatured, isLoading: isLoadingFeatured } = useGetFeaturedVenues();
+  const { data: rawNearby, isLoading: isLoadingNearby } = useGetNearbyVenues({ district: "الملقا" });
+
+  const featuredVenues = Array.isArray(rawFeatured) ? rawFeatured : [];
+  const nearbyVenues = Array.isArray(rawNearby) ? rawNearby : [];
 
   const handleCategoryClick = (slug: string) => {
     if (slug) {
@@ -89,7 +91,7 @@ export function Home() {
               <VenueCardSkeleton />
               <VenueCardSkeleton />
             </>
-          ) : featuredVenues && featuredVenues.length > 0 ? (
+          ) : featuredVenues.length > 0 ? (
             featuredVenues.slice(0, 3).map((venue, idx) => (
               <div key={venue.id} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 150}ms`, animationFillMode: "both" }}>
                 <VenueCard venue={venue} />
@@ -115,7 +117,7 @@ export function Home() {
             <>
               <VenueCardSkeleton />
             </>
-          ) : nearbyVenues && nearbyVenues.length > 0 ? (
+          ) : nearbyVenues.length > 0 ? (
             nearbyVenues.map((venue, idx) => (
               <div key={venue.id} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 150}ms`, animationFillMode: "both" }}>
                 <VenueCard venue={venue} />
