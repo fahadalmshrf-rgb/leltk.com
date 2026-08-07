@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
-import { useCreateInvitation } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 export function InviteCreate() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const createMutation = useCreateInvitation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const todayStr = useMemo(() => {
     return new Date().toISOString().split("T")[0];
@@ -68,38 +67,71 @@ export function InviteCreate() {
       return;
     }
 
-    try {
-      const res = await createMutation.mutateAsync({
-        data: {
-          inviterType: formData.inviterType as any,
-          template: formData.template as any,
-          groomName: formData.groomName,
-          groomFatherName: `${formData.groomFatherName} ${formData.groomGrandfatherName} ${formData.groomFamilyName}`,
-          brideFatherName: formData.brideFatherFullName,
-          eventDate: formData.eventDate,
-          eventTime: formData.eventTime || null,
-          venueName: formData.venueName || null,
-          venueAddress: formData.venueAddress || null,
-          note: formData.note || null,
-          giftEnabled: formData.giftEnabled,
-          giftBankName: formData.giftEnabled ? formData.giftBankName : null,
-          giftIban: formData.giftEnabled ? formData.giftIban : null,
-          giftNote: formData.giftEnabled ? formData.giftNote : null,
-        },
-      });
+    setIsSubmitting(true);
 
-      // Extract ID correctly whether res is `1` or `{ id: 1 }`
-      const invitationId = typeof res === "object" && res !== null ? (res as any).id : res;
+    try {
+      const payload = {
+        inviterType: formData.inviterType,
+        template: formData.template,
+        groomName: formData.groomName,
+        groomFatherName: `${formData.groomFatherName} ${formData.groomGrandfatherName} ${formData.groomFamilyName}`,
+        brideFatherName: formData.brideFatherFullName,
+        eventDate: formData.eventDate,
+        eventTime: formData.eventTime || null,
+        venueName: formData.venueName || null,
+        venueAddress: formData.venueAddress || null,
+        note: formData.note || null,
+        giftEnabled: formData.giftEnabled,
+        giftBankName: formData.giftEnabled ? formData.giftBankName : null,
+        giftIban: formData.giftEnabled ? formData.giftIban : null,
+        giftNote: formData.giftEnabled ? formData.giftNote : null,
+      };
+
+      // Try absolute production domains + local relative routes
+      const targets = [
+        "https://www.leltk.com/api/invitations",
+        "https://www.leltk.com/invitations",
+        "/api/invitations",
+        "/invitations"
+      ];
+
+      let response: Response | null = null;
+
+      for (const url of targets) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok || res.status !== 404) {
+            response = res;
+            break;
+          }
+        } catch (e) {
+          // ignore network failure on fallback scan
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(`Server returned status ${response?.status || 404}`);
+      }
+
+      const text = await response.text();
+      let invitationId: string | number | null = null;
+
+      try {
+        const json = JSON.parse(text);
+        invitationId = typeof json === "object" && json !== null ? (json.id || json.invitationId) : json;
+      } catch {
+        invitationId = text.trim();
+      }
 
       if (invitationId) {
         toast({ title: "تم إنشاء الدعوة بنجاح!" });
         setLocation(`/invite/manage/${invitationId}`);
       } else {
-        toast({
-          title: "تعذّر إنشاء الدعوة",
-          description: "لم يتم استلام معرّف الدعوة من الخادم.",
-          variant: "destructive",
-        });
+        throw new Error("No ID returned");
       }
     } catch (err) {
       toast({
@@ -107,6 +139,8 @@ export function InviteCreate() {
         description: "حدث خطأ أثناء حفظ البيانات، يرجى التأكد من الحقول وتكرار المحاولة.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -327,9 +361,9 @@ export function InviteCreate() {
         <Button
           type="submit"
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-base font-bold shadow-lg rounded-xl"
-          disabled={createMutation.isPending}
+          disabled={isSubmitting}
         >
-          {createMutation.isPending ? "جاري إنشاء الدعوة..." : "إنشاء الدعوة ومشاركتها"}
+          {isSubmitting ? "جاري إنشاء الدعوة..." : "إنشاء الدعوة ومشاركتها"}
         </Button>
       </form>
     </div>
