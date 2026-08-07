@@ -92,7 +92,9 @@ app.use(
   }),
 );
 
+// Mount router on both /api and / to handle requests with or without prefix
 app.use("/api", router);
+app.use("/", router);
 
 const lailtak = path.resolve(
   import.meta.dirname,
