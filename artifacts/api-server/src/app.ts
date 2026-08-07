@@ -92,7 +92,14 @@ app.use(
   }),
 );
 
-// Mount router on both /api and / to handle requests with or without prefix
+// Rewrite legacy/frontend requests starting with /venues to /api/venues
+app.use((req, _res, next) => {
+  if (req.path.startsWith("/venues")) {
+    req.url = "/api" + req.url;
+  }
+  next();
+});
+
 app.use("/api", router);
 app.use("/", router);
 
