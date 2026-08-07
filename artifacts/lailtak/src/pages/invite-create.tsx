@@ -87,23 +87,40 @@ export function InviteCreate() {
         giftNote: formData.giftEnabled ? formData.giftNote : null,
       };
 
-      // تجربة المسار ببادئة /api أولاً ثم البديل /invitations
-      let response = await fetch("/api/invitations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // Candidate API routes to prevent 404 route mismatch
+      const apiEndpoints = [
+        "/api/invitations",
+        "/invitations",
+        `${window.location.origin}/api/invitations`,
+        `${window.location.origin}/invitations`,
+      ];
 
-      if (!response.ok && response.status === 404) {
-        response = await fetch("/invitations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+      let response: Response | null = null;
+      let lastErrorStatus = 0;
+
+      for (const endpoint of apiEndpoints) {
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json, text/plain, */*",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (res.ok || res.status !== 404) {
+            response = res;
+            break;
+          }
+          lastErrorStatus = res.status;
+        } catch (fetchErr) {
+          console.warn(`Failed fetch to ${endpoint}:`, fetchErr);
+        }
       }
 
-      if (!response.ok) {
-        throw new Error(`Server status ${response.status}`);
+      if (!response || !response.ok) {
+        throw new Error(`Server returned status ${response?.status || lastErrorStatus || 404}`);
       }
 
       const text = await response.text();
@@ -111,7 +128,7 @@ export function InviteCreate() {
 
       try {
         const json = JSON.parse(text);
-        invitationId = typeof json === "object" && json !== null ? json.id : json;
+        invitationId = typeof json === "object" && json !== null ? (json.id || json.invitationId) : json;
       } catch {
         invitationId = text.trim();
       }
@@ -120,9 +137,10 @@ export function InviteCreate() {
         toast({ title: "تم إنشاء الدعوة بنجاح!" });
         setLocation(`/invite/manage/${invitationId}`);
       } else {
-        throw new Error("No ID received");
+        throw new Error("No valid invitation ID received from server");
       }
     } catch (err) {
+      console.error("Invite Creation Error:", err);
       toast({
         title: "تعذّر إنشاء الدعوة",
         description: "حدث خطأ أثناء حفظ البيانات، يرجى التأكد من الحقول وتكرار المحاولة.",
