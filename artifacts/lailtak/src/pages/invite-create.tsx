@@ -87,14 +87,23 @@ export function InviteCreate() {
         giftNote: formData.giftEnabled ? formData.giftNote : null,
       };
 
-      const response = await fetch("/api/invitations", {
+      // تجربة المسار ببادئة /api أولاً ثم البديل /invitations
+      let response = await fetch("/api/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      if (!response.ok && response.status === 404) {
+        response = await fetch("/invitations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
       if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
+        throw new Error(`Server status ${response.status}`);
       }
 
       const text = await response.text();
@@ -104,7 +113,6 @@ export function InviteCreate() {
         const json = JSON.parse(text);
         invitationId = typeof json === "object" && json !== null ? json.id : json;
       } catch {
-        // Plain text scalar response (e.g., "1")
         invitationId = text.trim();
       }
 
