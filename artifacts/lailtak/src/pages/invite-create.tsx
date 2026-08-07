@@ -70,6 +70,12 @@ export function InviteCreate() {
     setIsSubmitting(true);
 
     try {
+      // التحقق من اكتمال قسم الهدايا لمنع إرسال قيم فارغة
+      const isGiftValid =
+        formData.giftEnabled &&
+        formData.giftBankName.trim() !== "" &&
+        formData.giftIban.trim() !== "";
+
       const payload = {
         inviterType: formData.inviterType,
         template: formData.template,
@@ -81,18 +87,17 @@ export function InviteCreate() {
         venueName: formData.venueName || null,
         venueAddress: formData.venueAddress || null,
         note: formData.note || null,
-        giftEnabled: formData.giftEnabled,
-        giftBankName: formData.giftEnabled ? formData.giftBankName : null,
-        giftIban: formData.giftEnabled ? formData.giftIban : null,
-        giftNote: formData.giftEnabled ? formData.giftNote : null,
+        giftEnabled: isGiftValid,
+        giftBankName: isGiftValid ? formData.giftBankName : null,
+        giftIban: isGiftValid ? formData.giftIban : null,
+        giftNote: isGiftValid ? formData.giftNote : null,
       };
 
-      // Try absolute production domains + local relative routes
       const targets = [
         "https://www.leltk.com/api/invitations",
         "https://www.leltk.com/invitations",
         "/api/invitations",
-        "/invitations"
+        "/invitations",
       ];
 
       let response: Response | null = null;
@@ -109,7 +114,7 @@ export function InviteCreate() {
             break;
           }
         } catch (e) {
-          // ignore network failure on fallback scan
+          // التجاوز عند تعثر الاتصال بأحد المسارات البديلة
         }
       }
 
