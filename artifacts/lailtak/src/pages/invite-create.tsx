@@ -31,6 +31,7 @@ export function InviteCreate() {
     groomName: "",
     groomFatherName: "",
     groomGrandfatherName: "",
+    groomFamilyName: "",
     brideFatherFullName: "",
     eventDate: todayStr,
     eventTime: "20:00",
@@ -58,6 +59,10 @@ export function InviteCreate() {
       toast({ title: "تنبيه", description: "يرجى إدخال اسم جد العريس", variant: "destructive" });
       return;
     }
+    if (!formData.groomFamilyName.trim()) {
+      toast({ title: "تنبيه", description: "يرجى إدخال اسم عائلة العريس", variant: "destructive" });
+      return;
+    }
     if (!formData.brideFatherFullName.trim()) {
       toast({ title: "تنبيه", description: "يرجى إدخال الاسم الرباعي لوالد العروس", variant: "destructive" });
       return;
@@ -69,7 +74,7 @@ export function InviteCreate() {
           inviterType: formData.inviterType as any,
           template: formData.template as any,
           groomName: formData.groomName,
-          groomFatherName: `${formData.groomFatherName} ${formData.groomGrandfatherName}`,
+          groomFatherName: `${formData.groomFatherName} ${formData.groomGrandfatherName} ${formData.groomFamilyName}`,
           brideFatherName: formData.brideFatherFullName,
           eventDate: formData.eventDate,
           eventTime: formData.eventTime || null,
@@ -83,9 +88,12 @@ export function InviteCreate() {
         },
       });
 
-      if (res && res.id) {
+      // التعامل مع استجابة المعرّف سواء كانت { id: 1 } أو رقماً مباشراً 1
+      const invitationId = typeof res === "object" && res !== null ? (res as any).id : res;
+
+      if (invitationId) {
         toast({ title: "تم إنشاء الدعوة بنجاح!" });
-        setLocation(`/invite/manage/${res.id}`);
+        setLocation(`/invite/manage/${invitationId}`);
       }
     } catch (err) {
       toast({
@@ -152,17 +160,17 @@ export function InviteCreate() {
               <Sparkles className="w-4 h-4" /> أسماء العريس *
             </h3>
             
-            <div className="space-y-1.5">
-              <Label className="text-xs">الاسم الأول للعريس *</Label>
-              <Input
-                required
-                value={formData.groomName}
-                onChange={(e) => setFormData({ ...formData, groomName: e.target.value })}
-                placeholder="مثال: فهد"
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">الاسم الأول للعريس *</Label>
+                <Input
+                  required
+                  value={formData.groomName}
+                  onChange={(e) => setFormData({ ...formData, groomName: e.target.value })}
+                  placeholder="مثال: فهد"
+                />
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs">الاسم الأول لوالد العريس *</Label>
                 <Input
@@ -172,13 +180,25 @@ export function InviteCreate() {
                   placeholder="مثال: عبد الإله"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">اسم جد العريس *</Label>
                 <Input
                   required
                   value={formData.groomGrandfatherName}
                   onChange={(e) => setFormData({ ...formData, groomGrandfatherName: e.target.value })}
+                  placeholder="مثال: عبد المحسن"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">اسم عائلة العريس (اللقب) *</Label>
+                <Input
+                  required
+                  value={formData.groomFamilyName}
+                  onChange={(e) => setFormData({ ...formData, groomFamilyName: e.target.value })}
                   placeholder="مثال: المشرف"
                 />
               </div>
