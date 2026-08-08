@@ -94,10 +94,12 @@ export function InviteCreate() {
       };
 
       const targets = [
+        "https://leltk-com.onrender.com/api/invitations/invitations",
         "https://leltk-com.onrender.com/api/invitations",
         "https://leltk-com.onrender.com/invitations",
+        "/api/invitations/invitations",
         "/api/invitations",
-        "/invitations",
+        "/invitations"
       ];
 
       let response: Response | null = null;
