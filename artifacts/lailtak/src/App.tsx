@@ -9,17 +9,15 @@ import InviteManage from "@/pages/invite-manage";
 import { Splash } from "./components/Splash";
 import { useState } from "react";
 import { Home as HomeIcon, Search, Calendar } from "lucide-react";
-
 import { Home } from "./pages/home";
 import { SearchPage } from "./pages/search";
 import { VenueDetail } from "./pages/venue-detail";
 
 const queryClient = new QueryClient();
 
-function PageContainer({ children, hideNav = false }: { children: React.ReactNode, hideNav?: boolean }) {
+function PageContainer({ children, hideNav = false }: { children: React.ReactNode; hideNav?: boolean }) {
   return (
     <div className="min-h-[100dvh] w-full bg-background flex justify-center pb-16">
-      {/* Expanded max width from 430px to full responsive layout (up to max-w-6xl on desktop) */}
       <div className="w-full max-w-5xl bg-background relative min-h-[100dvh] px-4 md:px-8">
         {children}
         {!hideNav && <MobileNav />}
@@ -30,9 +28,7 @@ function PageContainer({ children, hideNav = false }: { children: React.ReactNod
 
 function MobileNav() {
   const [location] = useLocation();
-  
   return (
-    /* Fixed bottom bar that centers smoothly across screen sizes */
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-5xl bg-card border-t border-border flex justify-around items-center p-3 z-40 pb-safe shadow-lg">
       <Link href="/" className={`flex flex-col items-center gap-1 ${location === '/' ? 'text-primary' : 'text-muted-foreground hover:text-foreground transition-colors'}`}>
         <HomeIcon className={`w-6 h-6 ${location === '/' ? 'fill-primary/20' : ''}`} />
@@ -85,9 +81,12 @@ function Router() {
       <Route path="/venues/:id">
         <PageContainer hideNav><VenueDetail /></PageContainer>
       </Route>
-      <Route path="/invite" component={InviteCreate} />
+      <Route path="/invite">
+        <PageContainer hideNav><InviteCreate /></PageContainer>
+      </Route>
       <Route path="/i/:publicToken" component={InviteView} />
       <Route path="/invite/manage" component={InviteManage} />
+      <Route path="/invite/manage/:id" component={InviteManage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -99,7 +98,7 @@ function isDirectInvitationLink(): boolean {
   return /\/i\//.test(path) || (path.includes("/invite/manage") && hash.includes("token="));
 }
 
-function App() {
+export function App() {
   const [showSplash, setShowSplash] = useState(() => !isDirectInvitationLink());
 
   return (
