@@ -7,6 +7,7 @@ import path from "path";
 import { existsSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import invitationsRouter from "./routes/invitations.js";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
@@ -115,7 +116,7 @@ app.use((req, _res, next) => {
   }
   next();
 });
-
+app.use("/api/invitations", invitationsRouter);
 // Mount router on /api
 app.use("/api", router);
 
