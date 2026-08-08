@@ -69,7 +69,8 @@ function formatRsvp(r: typeof rsvpsTable.$inferSelect) {
   };
 }
 
-router.post("/invitations", invitationCreateLimiter, async (req, res): Promise<void> => {
+// Support both /invitations and root route when mounted directly
+router.post(["/invitations", "/"], invitationCreateLimiter, async (req, res): Promise<void> => {
   const parsed = CreateInvitationBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

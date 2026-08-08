@@ -50,13 +50,12 @@ app.use(
     credentials: true,
   }),
 );
-// Explicit payload caps: reject oversized bodies before parsing (defense-in-depth
-// against storage/CPU exhaustion via large JSON payloads).
+
+// Explicit payload caps
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 
-// Body-parser errors (oversized or malformed payloads) → clear JSON errors
-// instead of HTML error pages.
+// Body-parser errors
 app.use(
   (
     err: unknown,
@@ -100,9 +99,11 @@ app.use((req, _res, next) => {
   next();
 });
 
+// API Routes
 app.use("/api", router);
 app.use("/", router);
 
+// Static frontend serving
 const lailtak = path.resolve(
   import.meta.dirname,
   "..",
