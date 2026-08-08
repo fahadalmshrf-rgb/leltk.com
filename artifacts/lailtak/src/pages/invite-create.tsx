@@ -94,8 +94,8 @@ export function InviteCreate() {
       };
 
       const targets = [
-        "https://www.leltk.com/api/invitations",
-        "https://www.leltk.com/invitations",
+        "https://leltk-com.onrender.com/api/invitations",
+        "https://leltk-com.onrender.com/invitations",
         "/api/invitations",
         "/invitations",
       ];
