@@ -70,7 +70,6 @@ export function InviteCreate() {
     setIsSubmitting(true);
 
     try {
-      // التحقق من اكتمال قسم الهدايا لمنع إرسال قيم فارغة
       const isGiftValid =
         formData.giftEnabled &&
         formData.giftBankName.trim() !== "" &&
@@ -93,35 +92,14 @@ export function InviteCreate() {
         giftNote: isGiftValid ? formData.giftNote : null,
       };
 
-      const targets = [
-        "https://leltk-com.onrender.com/api/invitations/invitations",
-        "https://leltk-com.onrender.com/api/invitations",
-        "https://leltk-com.onrender.com/invitations",
-        "/api/invitations/invitations",
-        "/api/invitations",
-        "/invitations"
-      ];
+      const response = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-      let response: Response | null = null;
-
-      for (const url of targets) {
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (res.ok || res.status !== 404) {
-            response = res;
-            break;
-          }
-        } catch (e) {
-          // التجاوز عند تعثر الاتصال بأحد المسارات البديلة
-        }
-      }
-
-      if (!response || !response.ok) {
-        throw new Error(`Server returned status ${response?.status || 404}`);
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
       }
 
       const text = await response.text();
