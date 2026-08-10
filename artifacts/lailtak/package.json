@@ -3,10 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter ./artifacts/api-server run dev",
-    "build": "pnpm --filter ./artifacts/api-server run build",
-    "start": "pnpm --filter ./artifacts/api-server run start",
-    "serve": "pnpm --filter ./artifacts/api-server run start"
+    "build": "node artifacts/api-server/build.mjs",
+    "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
+    "serve": "node --enable-source-maps artifacts/api-server/dist/index.mjs"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
