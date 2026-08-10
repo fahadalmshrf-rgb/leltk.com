@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @workspace/api-server run dev",
-    "build": "pnpm --filter @workspace/api-server run build",
-    "start": "pnpm --filter @workspace/api-server run start",
-    "serve": "pnpm --filter @workspace/api-server run start"
+    "dev": "pnpm --filter ./artifacts/api-server run dev",
+    "build": "pnpm --filter ./artifacts/api-server run build",
+    "start": "pnpm --filter ./artifacts/api-server run start",
+    "serve": "pnpm --filter ./artifacts/api-server run start"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
