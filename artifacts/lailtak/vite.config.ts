@@ -16,6 +16,20 @@ const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+    port,
+    host: "0.0.0.0",
+    allowedHosts: true,
+    fs: {
+      strict: true,
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -42,14 +56,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-  },
-  server: {
-    port,
-    host: "0.0.0.0",
-    allowedHosts: true,
-    fs: {
-      strict: true,
-    },
   },
   preview: {
     port,
