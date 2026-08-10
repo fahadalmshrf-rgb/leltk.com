@@ -97,32 +97,40 @@ router.post(["/invitations", "/"], invitationCreateLimiter, async (req, res): Pr
     return;
   }
 
-  const [invitation] = await db
-    .insert(invitationsTable)
-    .values({
-      publicToken: randomUUID(),
-      manageToken: randomUUID(),
-      template,
-      inviterType,
-      groomName,
-      groomFatherName,
-      brideFatherName,
-      brideMotherName,
-      groomSideRef,
-      eventDate: parsed.data.eventDate,
-      eventTime: parsed.data.eventTime ?? null,
-      venueName: parsed.data.venueName ?? null,
-      venueAddress: parsed.data.venueAddress ?? null,
-      note: parsed.data.note ?? null,
-      giftEnabled,
-      giftIban,
-      giftBankName,
-      giftStcPay,
-      giftNote,
-    })
-    .returning();
+  try {
+    const [invitation] = await db
+      .insert(invitationsTable)
+      .values({
+        publicToken: randomUUID(),
+        manageToken: randomUUID(),
+        template,
+        inviterType,
+        groomName,
+        groomFatherName,
+        brideFatherName,
+        brideMotherName,
+        groomSideRef,
+        eventDate: parsed.data.eventDate,
+        eventTime: parsed.data.eventTime ?? null,
+        venueName: parsed.data.venueName ?? null,
+        venueAddress: parsed.data.venueAddress ?? null,
+        note: parsed.data.note ?? null,
+        giftEnabled,
+        giftIban,
+        giftBankName,
+        giftStcPay,
+        giftNote,
+      })
+      .returning();
 
-  res.status(201).json(formatInvitation(invitation));
+    res.status(201).json(formatInvitation(invitation));
+  } catch (error) {
+    console.error("Error creating invitation:", error);
+    res.status(500).json({ 
+      error: "Internal Server Error",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
 });
 
 router.get("/invitations/public/:publicToken", async (req, res): Promise<void> => {

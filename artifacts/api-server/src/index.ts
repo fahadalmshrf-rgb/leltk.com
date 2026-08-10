@@ -1,4 +1,4 @@
-import app from "./app";
+import app from "./app.ts";
 import { logger } from "./lib/logger";
 import { bootstrapAdmin } from "./lib/bootstrapAdmin";
 
