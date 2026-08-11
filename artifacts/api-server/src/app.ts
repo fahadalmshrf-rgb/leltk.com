@@ -8,10 +8,8 @@ import { existsSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
-const SESSION_SECRET = process.env.SESSION_SECRET;
-if (!SESSION_SECRET) {
-  throw new Error("SESSION_SECRET env var is required");
-}
+const SESSION_SECRET =
+  process.env.SESSION_SECRET || "lailtak-development-session-secret";
 
 const app: Express = express();
 
